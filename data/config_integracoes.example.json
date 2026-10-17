@@ -1,0 +1,15 @@
+{
+  "telegram": {
+    "enabled": false,
+    "bot_token": "",
+    "chat_id": "",
+    "allowed_user_ids": [],
+    "auto_send_review": true
+  },
+  "instagram": {
+    "enabled": false,
+    "username": "",
+    "password": "",
+    "auto_publish_on_approval": false
+  }
+}

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StudioLab · Creative AI Workspace</title>
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260918-3">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M15 16h34v32H15z"/>
+            <path d="M24 24h16v16H24z"/>
+            <path d="M10 26h5M49 26h5M10 38h5M49 38h5M26 10v6M38 10v6M26 48v6M38 48v6"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <strong>StudioLab</strong>
+          <span>Creative AI Workspace</span>
+        </div>
+      </div>
+
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav-stack" aria-label="Navegação principal">
+        <button class="nav-item active" data-section="studio">
+          <span class="nav-glyph">✦</span><span>Criação</span>
+        </button>
+        <button class="nav-item" data-section="history">
+          <span class="nav-glyph">◫</span><span>Biblioteca</span>
+        </button>
+        <button class="nav-item" data-section="integrations">
+          <span class="nav-glyph">⌁</span><span>Integrações</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="environment-card">
+        <div class="environment-head">
+          <span>AMBIENTE LOCAL</span>
+          <button id="refreshStatus" class="mini-icon-btn" title="Atualizar status">↻</button>
+        </div>
+        <div class="environment-row">
+          <span class="status-dot" id="ollamaDot"></span>
+          <div><b>Ollama</b><small id="ollamaText">Verificando…</small></div>
+        </div>
+        <div class="environment-row">
+          <span class="status-dot" id="comfyDot"></span>
+          <div><b>ComfyUI</b><small id="comfyText">Verificando…</small></div>
+        </div>
+        <div class="environment-row">
+          <span class="status-dot" id="telegramDot"></span>
+          <div><b>Telegram</b><small id="telegramText">Não configurado</small></div>
+        </div>
+        <div class="environment-row">
+          <span class="status-dot" id="instagramDot"></span>
+          <div><b>Instagram</b><small id="instagramText">Não configurado</small></div>
+        </div>
+        <div class="environment-row project-row">
+          <span class="project-dot"></span>
+          <div><b>Cliente ativo</b><small id="activeClientText">{{ active_client }}</small></div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">StudioLab · Local-first AI</div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <div class="eyebrow">CONTENT OPERATIONS</div>
+          <h1>Produção, validação e publicação em um só fluxo.</h1>
+          <p>Crie com IA ou envie artes prontas, valide no Telegram e publique no Instagram em um único ambiente.</p>
+        </div>
+        <div class="topbar-meta">
+          <div class="meta-card">
+            <span class="meta-label">MODELO</span>
+            <strong id="modelMeta">{{ model }}</strong>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">CHECKPOINT</span>
+            <strong id="checkpointMeta">{{ checkpoint }}</strong>
+          </div>
+          <div class="meta-card accent">
+            <span class="meta-label">MODO</span>
+            <strong><span class="pulse"></span> IA Livre</strong>
+          </div>
+        </div>
+      </header>
+
+      <section id="studioSection" class="section-view active">
+        <div class="workspace-grid">
+          <section class="control-panel surface-card">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">NOVA CRIAÇÃO</span>
+                <h2>Produzir conteúdo</h2>
+                <p>Crie com IA ou envie uma publicação pronta sem usar modelos generativos.</p>
+              </div>
+              <span class="autonomy-badge">Autonomia editorial ativa</span>
+            </div>
+
+            <div class="creation-mode-tabs" role="tablist" aria-label="Modo de produção">
+              <button class="creation-mode active" id="modeAiBtn" type="button" data-mode="ai">
+                <span>✦</span><div><b>Criar com IA</b><small>Conteúdo + imagem + composição</small></div>
+              </button>
+              <button class="creation-mode" id="modeManualBtn" type="button" data-mode="manual">
+                <span>↑</span><div><b>Post manual</b><small>Upload de imagens + legenda</small></div>
+              </button>
+            </div>
+
+            <div id="aiComposer">
+            <div class="mode-panel">
+              <div class="mode-icon">✦</div>
+              <div>
+                <b>Briefing com prioridade máxima</b>
+                <p>Quando você preencher o briefing, ele define obrigatoriamente o nicho, público, assunto e direção do post. Sem briefing, a IA usa apenas o histórico da conta atual.</p>
+              </div>
+            </div>
+
+            <div class="field-block model-control-block">
+              <div class="label-row">
+                <label class="field-label" for="modelSelect">Modelo de IA · Ollama</label>
+                <span class="field-counter" id="modelCount">carregando…</span>
+              </div>
+              <div class="model-select-row">
+                <select id="modelSelect">
+                  <option value="{{ model }}">{{ model }}</option>
+                </select>
+                <button class="icon-action-btn" id="refreshModelsBtn" type="button" title="Atualizar modelos disponíveis">↻</button>
+              </div>
+              <small class="model-help" id="modelHelp">O StudioLab consulta automaticamente os modelos instalados no Ollama.</small>
+            </div>
+
+            <div class="field-block model-control-block">
+              <div class="label-row">
+                <label class="field-label" for="checkpointSelect">Checkpoint de imagem · ComfyUI</label>
+                <span class="field-counter" id="checkpointCount">carregando…</span>
+              </div>
+              <div class="model-select-row">
+                <select id="checkpointSelect">
+                  <option value="{{ checkpoint }}">{{ checkpoint }}</option>
+                </select>
+                <button class="icon-action-btn" id="refreshCheckpointsBtn" type="button" title="Atualizar checkpoints disponíveis">↻</button>
+              </div>
+              <small class="model-help" id="checkpointHelp">O StudioLab consulta automaticamente os checkpoints disponíveis no ComfyUI.</small>
+            </div>
+
+            <div class="field-block">
+              <div class="label-row">
+                <label class="field-label" for="orientation">Briefing / contexto do projeto</label>
+                <span class="field-counter"><span id="orientationCount">0</span>/1200</span>
+              </div>
+              <textarea id="orientation" maxlength="1200" placeholder="Ex.: Marca: Leid Carol Confeitaria. Público: Goiânia. Criar conteúdo sobre brownies, bolos e sobremesas. Tom moderno e comercial. Não falar sobre agro ou tecnologia."></textarea>
+              <small class="model-help" id="briefingHelp">Quando preenchido, este briefing tem prioridade máxima e o histórico de outros perfis é ignorado.</small>
+              <small class="model-help" id="contextAccountHint">Conta atual: verificando…</small>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="template">Composição visual</label>
+                <select id="template">
+                  <option value="auto">Automático · alternar layouts</option>
+                  <option value="classic_left">Clássico editorial</option>
+                  <option value="spotlight_card">Spotlight premium</option>
+                  <option value="modern_split">Split moderno</option>
+                  <option value="ai_dynamic">Dinâmico por IA · layout exclusivo</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <span class="field-label">Imagem generativa</span>
+                <label class="switch-row">
+                  <input type="checkbox" id="useComfy" checked>
+                  <span class="switch"></span>
+                  <span class="switch-copy"><b>ComfyUI</b><small>Gerar fundo automaticamente</small></span>
+                </label>
+              </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">
+              <span class="generate-icon">✦</span>
+              <span class="generate-copy"><b>Gerar novo post</b><small>Conteúdo + imagem + composição</small></span>
+              <span class="generate-arrow">→</span>
+            </button>
+            </div>
+
+            <div id="manualComposer" class="hidden">
+              <div class="mode-panel manual-mode-panel">
+                <div class="mode-icon">↑</div>
+                <div>
+                  <b>Publicação sem IA</b>
+                  <p>Envie de 1 a 10 imagens prontas e escreva a legenda. O StudioLab usa o mesmo fluxo de validação no Telegram e publicação no Instagram.</p>
+                </div>
+              </div>
+
+              <div class="field-block">
+                <div class="label-row">
+                  <label class="field-label" for="manualImages">Imagens</label>
+                  <span class="field-counter" id="manualImageCount">0/10</span>
+                </div>
+                <label class="manual-dropzone" id="manualDropzone" for="manualImages">
+                  <input id="manualImages" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+                  <span class="dropzone-icon">↑</span>
+                  <b>Selecionar imagens</b>
+                  <small>JPG, PNG ou WEBP · até 10 imagens · várias imagens serão publicadas como carrossel</small>
+                </label>
+                <div class="manual-thumbs" id="manualThumbs"></div>
+              </div>
+
+              <div class="field-block">
+                <label class="field-label" for="manualTitle">Título interno <span class="optional-label">opcional</span></label>
+                <input class="studio-input" id="manualTitle" type="text" maxlength="90" placeholder="Usado apenas para organizar a biblioteca">
+              </div>
+
+              <div class="field-block">
+                <div class="label-row">
+                  <label class="field-label" for="manualCaption">Descrição / legenda</label>
+                  <span class="field-counter"><span id="manualCaptionCount">0</span>/2200</span>
+                </div>
+                <textarea id="manualCaption" maxlength="2200" placeholder="Digite exatamente a legenda que deverá ser publicada no Instagram."></textarea>
+              </div>
+
+              <div class="manual-flow-note">
+                <span>→</span>
+                <div><b>Mesmo fluxo de aprovação</b><small>Após salvar, o post segue as configurações atuais de Telegram e Instagram. Ollama e ComfyUI não são usados.</small></div>
+              </div>
+
+              <button class="generate-btn manual-submit-btn" id="manualPostBtn" type="button">
+                <span class="generate-icon">↑</span>
+                <span class="generate-copy"><b>Preparar publicação</b><small>Salvar + validar + publicar conforme as integrações</small></span>
+                <span class="generate-arrow">→</span>
+              </button>
+              <div class="manual-upload-progress hidden" id="manualUploadProgress">Enviando imagens e preparando publicação…</div>
+            </div>
+
+            <div class="progress-panel hidden" id="progressPanel">
+              <div class="progress-header">
+                <div>
+                  <span class="progress-stage" id="progressStage">INICIANDO</span>
+                  <b id="progressMessage">Preparando geração</b>
+                </div>
+                <strong id="progressPercent">0%</strong>
+              </div>
+              <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="progress-foot">
+                <span id="progressHint">A geração por CPU pode levar alguns minutos.</span>
+                <span class="elapsed" id="elapsedTime">00:00</span>
+              </div>
+            </div>
+
+            <div class="error-panel hidden" id="errorPanel"></div>
+          </section>
+
+          <section class="preview-panel surface-card">
+            <div class="preview-toolbar">
+              <div>
+                <span class="section-kicker">OUTPUT</span>
+                <h2>Preview da publicação</h2>
+              </div>
+              <div class="template-pill" id="templatePill">Aguardando geração</div>
+            </div>
+
+            <div class="preview-stage" id="previewStage">
+              <div class="preview-grid-bg"></div>
+              <div class="preview-empty" id="previewEmpty">
+                <div class="preview-empty-icon">✦</div>
+                <b>Nenhum card selecionado</b>
+                <span>Gere com IA, envie imagens prontas ou abra um item da biblioteca.</span>
+              </div>
+              <img id="cardPreview" alt="Preview do card gerado" class="hidden">
+              <div class="preview-loading hidden" id="previewLoading">
+                <div class="loader-ring"></div>
+                <b>Produzindo conteúdo</b>
+                <span>O fluxo continua em segundo plano.</span>
+              </div>
+            </div>
+
+            <div class="result-meta hidden" id="resultMeta">
+              <div class="result-tags">
+                <span class="result-badge" id="resultBadge"></span>
+                <span class="result-topic" id="resultTopic"></span>
+              </div>
+              <h3 id="resultTitle"></h3>
+              <p id="resultBody"></p>
+              <div class="highlight-row"><span>Destaque do card</span><strong id="resultHighlight"></strong></div>
+            </div>
+          </section>
+        </div>
+
+        <section class="caption-card surface-card hidden" id="captionCard">
+          <div class="caption-head">
+            <div>
+              <span class="section-kicker">COPY</span>
+              <h2>Legenda pronta</h2>
+            </div>
+            <button class="secondary-btn" id="copyCaption">Copiar legenda</button>
+          </div>
+          <div class="caption-text" id="captionText"></div>
+          <div class="generation-note hidden" id="generationNote"></div>
+
+          <div class="publication-strip hidden" id="publicationStrip">
+            <div class="publication-status-wrap">
+              <span class="publication-dot" id="publicationDot"></span>
+              <div>
+                <span class="section-kicker">PUBLICAÇÃO</span>
+                <b id="publicationStatus">Rascunho</b>
+                <small id="publicationDetail">Aguardando envio para validação.</small>
+              </div>
+            </div>
+            <div class="publication-actions">
+              <button class="secondary-btn" id="sendReviewBtn">Enviar ao Telegram</button>
+              <button class="secondary-btn hidden" id="publishRetryBtn">Publicar no Instagram</button>
+              <a class="secondary-btn link-btn hidden" id="instagramOpenBtn" href="#" target="_blank" rel="noopener">Abrir publicação</a>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="historySection" class="section-view">
+        <div class="history-head">
+          <div>
+            <span class="section-kicker">BIBLIOTECA</span>
+            <h2>Histórico de conteúdo</h2>
+            <p>Cards, legendas, validações e publicações ficam organizados automaticamente.</p>
+          </div>
+          <button class="secondary-btn" id="refreshHistory">Atualizar biblioteca</button>
+        </div>
+        <div class="history-grid" id="historyGrid"></div>
+        <div class="history-empty hidden" id="historyEmpty">
+          <div>◫</div><b>Nenhum conteúdo salvo</b><span>O primeiro post aparecerá aqui após a geração.</span>
+        </div>
+      </section>
+
+      <section id="integrationsSection" class="section-view">
+        <div class="integration-head">
+          <div>
+            <span class="section-kicker">AUTOMAÇÃO SOCIAL</span>
+            <h2>Integrações</h2>
+            <p>Configure a validação humana no Telegram e a publicação automática no Instagram.</p>
+          </div>
+          <button class="primary-small-btn" id="saveIntegrations">Salvar configurações</button>
+        </div>
+
+        <div class="workflow-card surface-card">
+          <div class="workflow-step"><span>01</span><div><b>StudioLab prepara</b><small>IA ou upload manual</small></div></div>
+          <div class="workflow-arrow">→</div>
+          <div class="workflow-step"><span>02</span><div><b>Telegram valida</b><small>Aprovar ou reprovar</small></div></div>
+          <div class="workflow-arrow">→</div>
+          <div class="workflow-step"><span>03</span><div><b>Instagram publica</b><small>Somente após aprovação</small></div></div>
+        </div>
+
+        <div class="integration-grid">
+          <section class="integration-card surface-card">
+            <div class="integration-card-head">
+              <div class="integration-logo telegram">TG</div>
+              <div><span class="section-kicker">VALIDAÇÃO</span><h3>Telegram Bot</h3></div>
+              <span class="integration-state" id="telegramConfigState">Não configurado</span>
+            </div>
+
+            <label class="toggle-line">
+              <input type="checkbox" id="telegramEnabled">
+              <span class="switch"></span>
+              <span><b>Ativar validação via Telegram</b><small>O StudioLab enviará o card para o chat configurado.</small></span>
+            </label>
+
+            <div class="form-stack">
+              <div class="form-field">
+                <label for="telegramToken">Bot Token</label>
+                <input type="password" id="telegramToken" autocomplete="off" placeholder="Cole o token criado no BotFather">
+                <small id="telegramTokenHint">O token fica salvo somente neste computador.</small>
+              </div>
+              <div class="form-field">
+                <label for="telegramChatId">Chat ID</label>
+                <input type="text" id="telegramChatId" placeholder="Ex.: 123456789 ou -100...">
+              </div>
+              <div class="form-field">
+                <label for="telegramAllowedUsers">Usuários autorizados a aprovar <span>opcional</span></label>
+                <input type="text" id="telegramAllowedUsers" placeholder="IDs separados por vírgula. Vazio = qualquer usuário do chat.">
+              </div>
+            </div>
+
+            <label class="toggle-line compact-toggle">
+              <input type="checkbox" id="telegramAutoSend" checked>
+              <span class="switch"></span>
+              <span><b>Enviar automaticamente após gerar</b><small>Se desativado, você envia manualmente pela biblioteca.</small></span>
+            </label>
+
+            <div class="integration-actions">
+              <button class="secondary-btn" id="testTelegram">Testar Telegram</button>
+              <span id="telegramTestResult" class="inline-result"></span>
+            </div>
+          </section>
+
+          <section class="integration-card surface-card">
+            <div class="integration-card-head">
+              <div class="integration-logo instagram">IG</div>
+              <div><span class="section-kicker">PUBLICAÇÃO</span><h3>Instagram · Instagrapi</h3></div>
+              <span class="integration-state" id="instagramConfigState">Não configurado</span>
+            </div>
+
+            <label class="toggle-line">
+              <input type="checkbox" id="instagramEnabled">
+              <span class="switch"></span>
+              <span><b>Ativar publicação no Instagram</b><small>A publicação só acontece depois de uma aprovação válida.</small></span>
+            </label>
+
+            <div class="integration-account-current">
+              <span>Conta ativa</span>
+              <b id="instagramActiveAccount">Nenhuma conta conectada</b>
+              <small>Para trocar, informe abaixo o novo usuário e a senha e clique em <b>Trocar conta</b>. A conta atual só é substituída após o novo login ser validado.</small>
+            </div>
+
+            <div class="form-stack">
+              <div class="form-field">
+                <label for="instagramUsername">Usuário do Instagram</label>
+                <input type="text" id="instagramUsername" autocomplete="username" placeholder="usuario_sem_arroba">
+              </div>
+              <div class="form-field">
+                <label for="instagramPassword">Senha</label>
+                <input type="password" id="instagramPassword" autocomplete="new-password" placeholder="Deixe vazio para manter a senha já salva">
+                <small id="instagramPasswordHint">A sessão é persistida localmente para reduzir novos logins.</small>
+              </div>
+            </div>
+
+            <label class="toggle-line compact-toggle">
+              <input type="checkbox" id="instagramAutoPublish" checked>
+              <span class="switch"></span>
+              <span><b>Publicar automaticamente ao aprovar</b><small>O botão Aprovar no Telegram dispara a publicação.</small></span>
+            </label>
+
+            <div class="integration-actions">
+              <button class="secondary-btn" id="testInstagram">Testar login</button>
+              <button class="secondary-btn" id="switchInstagram">Trocar conta</button>
+              <span id="instagramTestResult" class="inline-result"></span>
+            </div>
+
+            <div class="integration-warning">
+              Instagrapi usa a API privada do Instagram. Sessões, desafios e limites podem mudar; mantenha a conta e o dispositivo estáveis.
+            </div>
+          </section>
+        </div>
+
+        <div class="integration-footnote surface-card">
+          <b>Segurança local</b>
+          <p>Token, senha e sessão ficam em <code>data/</code> no computador onde o StudioLab está instalado. O portal nunca devolve os segredos completos ao navegador.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="{{ url_for('static', filename='app.js') }}?v=20260918-4"></script>
+</body>
+</html>
