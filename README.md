@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner-insta-agente.png" alt="Insta-Agente banner" width="100%" />
+  <img src="banner-insta-agente.png" alt="Insta-Agente banner" width="100%" />
 </p>
 
 <h1 align="center">Insta-Agente</h1>
